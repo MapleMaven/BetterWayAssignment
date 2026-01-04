@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import './App.css'
 import { useProducts } from './hooks/useProducts'
 import ProductCard from './components/ProductCard'
 
 function App() {
   const { products, loading, error } = useProducts();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortOrder, setSortOrder] = useState('default');
 
   if (loading) {
     return (
