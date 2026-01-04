@@ -2,12 +2,18 @@ import { useState, useMemo } from 'react'
 import './App.css'
 import { useProducts } from './hooks/useProducts'
 import ProductCard from './components/ProductCard'
+import Cart from './components/Cart'
+import { useCart } from './context/CartContext'
 
 function App() {
   const { products, loading, error } = useProducts();
+  const { cartItems } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortOrder, setSortOrder] = useState('default');
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   // Derive unique categories from products
   const categories = useMemo(() => {
@@ -63,7 +69,25 @@ function App() {
 
   return (
     <div className="app">
-      <h1>Product Catalog</h1>
+      <header className="header">
+        <h1>Product Catalog</h1>
+        <button className="cart-icon-button" onClick={() => setIsCartOpen(!isCartOpen)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 2L7 6H3L6 20h12l3-14h-4l-2-4zM9 2h6M9 6v14M15 6v14"/>
+          </svg>
+          {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+        </button>
+      </header>
+      
+      {isCartOpen && (
+        <>
+          <div className="cart-overlay" onClick={() => setIsCartOpen(false)} />
+          <div className="cart-sidebar">
+            <button className="close-cart" onClick={() => setIsCartOpen(false)}>×</button>
+            <Cart />
+          </div>
+        </>
+      )}
       
       <div className="filters">
         <input
