@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import './App.css'
 import { useProducts } from './hooks/useProducts'
+import { useDebounce } from './hooks/useDebounce'
 import ProductCard from './components/ProductCard'
 import Cart from './components/Cart'
 import { useCart } from './context/CartContext'
@@ -14,30 +15,34 @@ function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const hasActiveFilters = searchQuery !== '' || selectedCategory !== 'all' || sortOrder !== 'default';
 
-  // Derive unique categories from products
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setSortOrder('default');
+  };
+
   const categories = useMemo(() => {
     const uniqueCategories = [...new Set(products.map(p => p.category))];
     return uniqueCategories.sort();
   }, [products]);
 
-  // Filter and sort products
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // Filter by search query
-    if (searchQuery) {
+    if (debouncedSearchQuery) {
       result = result.filter(product =>
-        product.title.toLowerCase().includes(searchQuery.toLowerCase())
+        product.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       );
     }
 
-    // Filter by category
     if (selectedCategory !== 'all') {
       result = result.filter(product => product.category === selectedCategory);
     }
 
-    // Sort products
+
     if (sortOrder === 'price-asc') {
       result.sort((a, b) => a.price - b.price);
     } else if (sortOrder === 'price-desc') {
@@ -49,7 +54,7 @@ function App() {
     }
 
     return result;
-  }, [products, searchQuery, selectedCategory, sortOrder]);
+  }, [products, debouncedSearchQuery, selectedCategory, sortOrder]);
 
   if (loading) {
     return (
@@ -122,13 +127,28 @@ function App() {
           <option value="name-asc">Name: A to Z</option>
           <option value="name-desc">Name: Z to A</option>
         </select>
+        
+        {hasActiveFilters && (
+          <button className="clear-filters-button" onClick={clearFilters}>
+            Clear All Filters
+          </button>
+        )}
       </div>
 
-      <div className="product-grid">
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {filteredProducts.length === 0 ? (
+        <div className="empty-state">
+          <p>No products found matching your criteria.</p>
+          <button className="clear-filters-button" onClick={clearFilters}>
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+          <div className="product-grid">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

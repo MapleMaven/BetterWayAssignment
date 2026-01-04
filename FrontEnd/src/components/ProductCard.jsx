@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useCart } from '../context/CartContext';
 import styles from './ProductCard.module.css';
 
@@ -5,19 +6,13 @@ const ProductCard = ({ product }) => {
   const { title, price, stock, category, thumbnail, id } = product;
   const { cartItems, addToCart } = useCart();
 
-  // Find if this product is already in cart and get its quantity
   const cartItem = cartItems.find(item => item.id === id);
   const quantityInCart = cartItem ? cartItem.quantity : 0;
-
-  // Check if we can add more to cart
   const canAddToCart = stock > 0 && quantityInCart < stock;
 
   const handleAddToCart = () => {
     if (!canAddToCart) return;
-
     addToCart(product);
-    
-    // Visual feedback
     alert(`${title} added to cart!`);
   };
 
@@ -48,4 +43,4 @@ const ProductCard = ({ product }) => {
   );
 };
 
-export default ProductCard;
+export default memo(ProductCard);
